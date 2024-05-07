@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/victorsouzaleal/wa-sticker-formatter.git"
+    "url": "git+https://github.com/victorsouzaleal/wa-leal-stickers.git"
   },
   "keywords": [
     "whatsapp",
@@ -22,9 +22,9 @@
   "author": "victorsouzaleal",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/victorsouzaleal/wa-sticker-formatter/issues"
+    "url": "https://github.com/victorsouzaleal/wa-leal-stickers/issues"
   },
-  "homepage": "https://github.com/victorsouzaleal/wa-sticker-formatter#readme",
+  "homepage": "https://github.com/victorsouzaleal/wa-leal-stickers#readme",
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "file-type": "^19.0.0",

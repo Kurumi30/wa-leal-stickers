@@ -9,51 +9,45 @@ import {tmpdir} from 'os'
 import sharp from 'sharp'
 
 
-export const createSticker = (buffer, options)=>{
-    return new Promise(async (resolve, reject)=>{
-        try{
-            let {mime} = await fileTypeFromBuffer(buffer)
-            let isVideo = mime.startsWith('video')
-            let isAnimated = isVideo || mime.includes('gif') || mime.includes('webp')
-            const webpBuffer = await convertToWebp(buffer, isVideo, options.fps)
-            const img = sharp(webpBuffer, {animated: isAnimated}).toFormat('webp')
-    
-            switch (options.type) {
-                case 'circle':
-                    img.composite([
-                        {
-                            input: Buffer.from(
-                                `<svg width="512" height="512"><circle cx="256" cy="256" r="256"/></svg>`
-                            ),
-                            blend: 'dest-in',
-                            gravity: 'northeast',
-                            tile: true
-                        }
-                    ])
-                    break
-                
-                case 'default':
-                    break
-        
-                case 'rounded':
-                    img.composite([
-                        {
-                            input: Buffer.from(
-                                `<svg width="512" height="512"><rect rx="75" ry="75" width="512" height="512"/></svg>`
-                            ),
-                            blend: 'dest-in',
-                            gravity: 'northeast',
-                            tile: true
-                        }
-                    ])
-                    break
-            }
+export const createSticker = async (buffer, options)=>{
+    let {mime} = await fileTypeFromBuffer(buffer)
+    let isVideo = mime.startsWith('video')
+    let isAnimated = isVideo || mime.includes('gif') || mime.includes('webp')
+    const webpBuffer = await convertToWebp(buffer, isVideo, options.fps)
+    const img = sharp(webpBuffer, {animated: isAnimated}).toFormat('webp')
 
-            resolve(await addExif(await img.webp({quality: options.quality, lossless: false}).toBuffer(), options.pack, options.author))
-        } catch(err){
-            reject(err)
-        } 
-    })
+    switch (options.type) {
+        case 'circle':
+            img.composite([
+                {
+                    input: Buffer.from(
+                        `<svg width="512" height="512"><circle cx="256" cy="256" r="256"/></svg>`
+                    ),
+                    blend: 'dest-in',
+                    gravity: 'northeast',
+                    tile: true
+                }
+            ])
+            break
+        
+        case 'default':
+            break
+
+        case 'rounded':
+            img.composite([
+                {
+                    input: Buffer.from(
+                        `<svg width="512" height="512"><rect rx="75" ry="75" width="512" height="512"/></svg>`
+                    ),
+                    blend: 'dest-in',
+                    gravity: 'northeast',
+                    tile: true
+                }
+            ])
+            break
+    }
+
+    return await addExif(await img.webp({quality: options.quality, lossless: false}).toBuffer(), options.pack, options.author)
 }
 
 async function convertToWebp(buffer, isVideo, fps){
