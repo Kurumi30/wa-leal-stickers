@@ -13,3 +13,9 @@ export const toSticker  = async (buffer, stickerOptions = {author : 'not_defined
     return bufferWebp
 }
 
+export const StickerTypes = {
+    CIRCLE: 'circle',
+    ROUNDED: 'rounded',
+    DEFAULT: 'default'
+}
+
