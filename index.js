@@ -1,6 +1,5 @@
 import {createSticker} from './util/convert.js'
 
-
 export const toSticker  = async (buffer, stickerOptions = {author : 'not_defined', pack : 'not_defined', fps : 10, quality : 60, type : 'default'}) =>{
     let options = {
         author: stickerOptions.author || 'not_defined',
