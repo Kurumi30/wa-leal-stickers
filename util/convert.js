@@ -7,6 +7,7 @@ import fs from 'fs-extra'
 import {fileTypeFromBuffer} from 'file-type'
 import {tmpdir} from 'os'
 import sharp from 'sharp'
+import path from 'path'
 
 
 export const createSticker = async (buffer, options)=>{
@@ -52,11 +53,10 @@ export const createSticker = async (buffer, options)=>{
 
 async function convertToWebp(buffer, isVideo, fps){
     return new Promise((resolve,reject)=>{
-        let inputPath
-        let optionsFfmpeg
-        let webpPath = `${tmpdir()}/${Math.random().toString(36)}.webp`
+        if(!fs.pathExistsSync(path.resolve('tmp'))) fs.mkdirSync(path.resolve('tmp'))
+        let inputPath,optionsFfmpeg, webpPath = path.resolve(`tmp/${Math.random().toString(36)}.webp`)
         if(isVideo){
-            inputPath = `${tmpdir()}/${Math.random().toString(36)}.mp4`
+            inputPath = path.resolve(`tmp/${Math.random().toString(36)}.mp4`)
             optionsFfmpeg = [
                 "-vcodec libwebp",
                 "-filter:v",
@@ -71,7 +71,7 @@ async function convertToWebp(buffer, isVideo, fps){
                 "-s 512:512"
             ]
         } else{
-            inputPath = `${tmpdir()}/${Math.random().toString(36)}.png`
+            inputPath = path.resolve(`tmp/${Math.random().toString(36)}.png`)
             optionsFfmpeg = [
                 "-vcodec libwebp",
                 "-loop 0",
