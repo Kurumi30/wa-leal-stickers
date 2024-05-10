@@ -1,4 +1,5 @@
 import {createSticker} from './util/convert.js'
+import fs from 'fs-extra'
 
 export const toSticker  = async (buffer, stickerOptions = {author : 'not_defined', pack : 'not_defined', fps : 10, quality : 60, type : 'default'}) =>{
     try{

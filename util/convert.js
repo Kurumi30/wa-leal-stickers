@@ -5,17 +5,18 @@ import crypto from 'node:crypto'
 import webp from "node-webpmux"
 import fs from 'fs-extra'
 import {fileTypeFromBuffer} from 'file-type'
-import {tmpdir} from 'os'
 import sharp from 'sharp'
 import path from 'path'
+sharp.cache({files: 0})
 
 
 export const createSticker = async (buffer, options)=>{
+    if(!fs.pathExistsSync(path.resolve('tmp'))) fs.mkdirSync(path.resolve('tmp'))
     let {mime} = await fileTypeFromBuffer(buffer)
     let isVideo = mime.startsWith('video')
     let isAnimated = isVideo || mime.includes('gif') || mime.includes('webp')
-    const webpBuffer = await convertToWebp(buffer, isVideo, options.fps)
-    const img = sharp(webpBuffer, {animated: isAnimated}).toFormat('webp')
+    const webpOutputPath = await convertToWebp(buffer, isVideo, options.fps)
+    const img = sharp(webpOutputPath, {animated: isAnimated}).toFormat('webp')
 
     switch (options.type) {
         case 'circle':
@@ -48,12 +49,17 @@ export const createSticker = async (buffer, options)=>{
             break
     }
 
-    return await addExif(await img.webp({quality: options.quality, lossless: false}).toBuffer(), options.pack, options.author)
+    const sharpStickerPath = path.resolve(`tmp/${Math.random().toString(36)}.webp`)
+    await img.webp({quality: options.quality, lossless: false}).toFile(sharpStickerPath)
+    const bufferSticker = await addExif(sharpStickerPath, options.pack, options.author)
+    fs.unlinkSync(webpOutputPath)
+    fs.unlinkSync(sharpStickerPath)
+
+    return bufferSticker
 }
 
 async function convertToWebp(buffer, isVideo, fps){
     return new Promise((resolve,reject)=>{
-        if(!fs.pathExistsSync(path.resolve('tmp'))) fs.mkdirSync(path.resolve('tmp'))
         let inputPath,optionsFfmpeg, webpPath = path.resolve(`tmp/${Math.random().toString(36)}.webp`)
         if(isVideo){
             inputPath = path.resolve(`tmp/${Math.random().toString(36)}.mp4`)
@@ -84,10 +90,8 @@ async function convertToWebp(buffer, isVideo, fps){
         fs.writeFileSync(inputPath, buffer)
 
         ffmpeg(inputPath).outputOptions(optionsFfmpeg).save(webpPath).on('end', async ()=>{
-            let bufferWebp = fs.readFileSync(webpPath)
             fs.unlinkSync(inputPath)
-            fs.unlinkSync(webpPath)
-            resolve(bufferWebp)
+            resolve(webpPath)
         }).on('error', async (err)=>{
             fs.unlinkSync(inputPath)
             reject(err)
@@ -95,7 +99,7 @@ async function convertToWebp(buffer, isVideo, fps){
     })
 }
 
-async function addExif(buffer, pack, author){
+async function addExif(file, pack, author){
     const img = new webp.Image()
     const stickerPackId = crypto.randomBytes(32).toString('hex')
     const json = { 'sticker-pack-id': stickerPackId, 'sticker-pack-name': pack, 'sticker-pack-publisher': author}
@@ -103,7 +107,7 @@ async function addExif(buffer, pack, author){
     let jsonBuffer = Buffer.from(JSON.stringify(json), 'utf8')
     let exif = Buffer.concat([exifAttr, jsonBuffer])
     exif.writeUIntLE(jsonBuffer.length, 14, 4)
-    await img.load(buffer)
+    await img.load(file)
     img.exif = exif
     return await img.save(null)
 }
