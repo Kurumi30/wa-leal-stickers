@@ -6,25 +6,27 @@ import webp from "node-webpmux"
 import fs from 'fs-extra'
 import {fileTypeFromBuffer} from 'file-type'
 import {tmpdir} from 'os'
+import jimp from 'jimp'
 
 
 
 export const createSticker = async (buffer, options)=>{
     let {mime} = await fileTypeFromBuffer(buffer)
     let isVideo = mime.startsWith('video')
-    const bufferWebp = await convertToWebp(buffer, isVideo, options.fps)
+    let isAnimated = isVideo || mime.includes('gif')
+    const bufferWebp = await convertToWebp(buffer, isAnimated, options)
     return await addExif(bufferWebp, options.pack, options.author)
 }
 
-async function convertToWebp(buffer, isVideo, fps){
-    return new Promise((resolve,reject)=>{
+async function convertToWebp(buffer, isAnimated, options){
+    return new Promise(async (resolve,reject)=>{
         let inputPath,optionsFfmpeg, webpPath = `${tmpdir()}/${Math.random().toString(36)}.webp`
-        if(isVideo){
+        if(isAnimated){
             inputPath = `${tmpdir()}/${Math.random().toString(36)}.mp4`
             optionsFfmpeg = [
                 "-vcodec libwebp",
                 "-filter:v",
-                `fps=fps=${fps}`,
+                `fps=fps=${options.fps}`,
                 "-lossless 0",
                 "-compression_level 4",
                 "-q:v 10",
@@ -36,12 +38,12 @@ async function convertToWebp(buffer, isVideo, fps){
             ]
         } else{
             inputPath = `${tmpdir()}/${Math.random().toString(36)}.png`
+            buffer = await editImage(buffer, options.type)
             optionsFfmpeg = [
                 "-vcodec libwebp",
                 "-loop 0",
                 "-lossless 1",
-                "-q:v 100",
-                "-s 512:512"
+                "-q:v 100"
             ]
         }
 
@@ -57,6 +59,19 @@ async function convertToWebp(buffer, isVideo, fps){
             reject(err)
         })
     })
+}
+
+async function editImage(buffer, type){
+    const image = await jimp.read(buffer)
+    image.resize(512,512)
+    switch (type) {
+        case 'circle':
+            image.circle()
+            break
+        case 'default':
+            break
+    }
+    return await image.getBufferAsync('image/png')
 }
 
 async function addExif(buffer, pack, author){

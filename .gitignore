@@ -131,3 +131,6 @@ dist
 
 # Temp files
 tmp
+result_test
+*.png
+*.mp4

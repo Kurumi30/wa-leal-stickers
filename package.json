@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node test.js",
     "start": "node index.js"
   },
   "repository": {
@@ -30,8 +30,8 @@
     "file-type": "^19.0.0",
     "fluent-ffmpeg": "^2.1.2",
     "fs-extra": "^11.2.0",
+    "jimp": "^0.22.12",
     "node-webpmux": "^3.2.0",
-    "path": "^0.12.7",
-    "sharp": "0.32.2"
+    "path": "^0.12.7"
   }
 }
