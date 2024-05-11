@@ -26,10 +26,8 @@ import { toSticker, StickerTypes } from 'wa-leal-stickers' // ES6
 
 ```js
 const stickerBuffer = await toSticker(buffer, {
-    pack: 'Leal Pack', // The pack name
-    author: 'Leal', // The author name
-    type: StickerTypes.DEFAULT, // The sticker type
-    quality: 60, // The quality of the output file
+    pack: 'Pack_name', // The pack name
+    author: 'Your_name', // The author name
     fps: 10 // The fps of the output file
 })
 
@@ -38,14 +36,4 @@ conn.sendMessage(jid, {sticker : stickerBuffer})
 
 ```
 
-## Sticker Types
-
-```js
-const StickerTypes = {
-    DEFAULT = 'default',
-    CIRCLE = 'circle',
-    ROUNDED = 'rounded'
-}
-
-```
 

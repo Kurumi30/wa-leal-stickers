@@ -5,64 +5,22 @@ import crypto from 'node:crypto'
 import webp from "node-webpmux"
 import fs from 'fs-extra'
 import {fileTypeFromBuffer} from 'file-type'
-import sharp from 'sharp'
-import path from 'path'
-sharp.cache({files: 0})
+import {tmpdir} from 'os'
+
 
 
 export const createSticker = async (buffer, options)=>{
-    if(!fs.pathExistsSync(path.resolve('tmp'))) fs.mkdirSync(path.resolve('tmp'))
     let {mime} = await fileTypeFromBuffer(buffer)
     let isVideo = mime.startsWith('video')
-    let isAnimated = isVideo || mime.includes('gif') || mime.includes('webp')
-    const webpOutputPath = await convertToWebp(buffer, isVideo, options.fps)
-    const img = sharp(webpOutputPath, {animated: isAnimated}).toFormat('webp')
-
-    switch (options.type) {
-        case 'circle':
-            img.composite([
-                {
-                    input: Buffer.from(
-                        `<svg width="512" height="512"><circle cx="256" cy="256" r="256"/></svg>`
-                    ),
-                    blend: 'dest-in',
-                    gravity: 'northeast',
-                    tile: true
-                }
-            ])
-            break
-        
-        case 'default':
-            break
-
-        case 'rounded':
-            img.composite([
-                {
-                    input: Buffer.from(
-                        `<svg width="512" height="512"><rect rx="75" ry="75" width="512" height="512"/></svg>`
-                    ),
-                    blend: 'dest-in',
-                    gravity: 'northeast',
-                    tile: true
-                }
-            ])
-            break
-    }
-
-    const sharpStickerPath = path.resolve(`tmp/${Math.random().toString(36)}.webp`)
-    await img.webp({quality: options.quality, lossless: false}).toFile(sharpStickerPath)
-    const bufferSticker = await addExif(sharpStickerPath, options.pack, options.author)
-    fs.unlinkSync(webpOutputPath)
-    fs.unlinkSync(sharpStickerPath)
-
-    return bufferSticker
+    const bufferWebp = await convertToWebp(buffer, isVideo, options.fps)
+    return await addExif(bufferWebp, options.pack, options.author)
 }
 
 async function convertToWebp(buffer, isVideo, fps){
     return new Promise((resolve,reject)=>{
-        let inputPath,optionsFfmpeg, webpPath = path.resolve(`tmp/${Math.random().toString(36)}.webp`)
+        let inputPath,optionsFfmpeg, webpPath = `${tmpdir()}/${Math.random().toString(36)}.webp`
         if(isVideo){
-            inputPath = path.resolve(`tmp/${Math.random().toString(36)}.mp4`)
+            inputPath = `${tmpdir()}/${Math.random().toString(36)}.mp4`
             optionsFfmpeg = [
                 "-vcodec libwebp",
                 "-filter:v",
@@ -77,7 +35,7 @@ async function convertToWebp(buffer, isVideo, fps){
                 "-s 512:512"
             ]
         } else{
-            inputPath = path.resolve(`tmp/${Math.random().toString(36)}.png`)
+            inputPath = `${tmpdir()}/${Math.random().toString(36)}.png`
             optionsFfmpeg = [
                 "-vcodec libwebp",
                 "-loop 0",
@@ -90,8 +48,10 @@ async function convertToWebp(buffer, isVideo, fps){
         fs.writeFileSync(inputPath, buffer)
 
         ffmpeg(inputPath).outputOptions(optionsFfmpeg).save(webpPath).on('end', async ()=>{
+            let buffer = fs.readFileSync(webpPath)
+            fs.unlinkSync(webpPath)
             fs.unlinkSync(inputPath)
-            resolve(webpPath)
+            resolve(buffer)
         }).on('error', async (err)=>{
             fs.unlinkSync(inputPath)
             reject(err)
@@ -99,7 +59,7 @@ async function convertToWebp(buffer, isVideo, fps){
     })
 }
 
-async function addExif(file, pack, author){
+async function addExif(buffer, pack, author){
     const img = new webp.Image()
     const stickerPackId = crypto.randomBytes(32).toString('hex')
     const json = { 'sticker-pack-id': stickerPackId, 'sticker-pack-name': pack, 'sticker-pack-publisher': author}
@@ -107,7 +67,7 @@ async function addExif(file, pack, author){
     let jsonBuffer = Buffer.from(JSON.stringify(json), 'utf8')
     let exif = Buffer.concat([exifAttr, jsonBuffer])
     exif.writeUIntLE(jsonBuffer.length, 14, 4)
-    await img.load(file)
+    await img.load(buffer)
     img.exif = exif
     return await img.save(null)
 }
