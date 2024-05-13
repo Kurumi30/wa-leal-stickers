@@ -1,6 +1,7 @@
 import ffmpeg from "fluent-ffmpeg"
-import ffmpegInstaller from '@ffmpeg-installer/ffmpeg'
-ffmpeg.setFfmpegPath(ffmpegInstaller.path)
+import('@ffmpeg-installer/ffmpeg').then((ffmpegInstaller)=>{
+    ffmpeg.setFfmpegPath(ffmpegInstaller.path)
+}).catch(()=>{})
 import crypto from 'node:crypto'
 import webp from "node-webpmux"
 import fs from 'fs-extra'

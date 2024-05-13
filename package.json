@@ -26,12 +26,14 @@
   },
   "homepage": "https://github.com/victorsouzaleal/wa-leal-stickers#readme",
   "dependencies": {
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "file-type": "^19.0.0",
     "fluent-ffmpeg": "^2.1.2",
     "fs-extra": "^11.2.0",
     "jimp": "^0.22.12",
     "node-webpmux": "^3.2.0",
     "path": "^0.12.7"
+  },
+  "optionalDependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0"
   }
 }
