@@ -1,6 +1,6 @@
 {
   "name": "wa-leal-stickers",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Conversion of videos/images to WhatsApp Stickers (WebP) ",
   "main": "index.js",
   "type": "module",
