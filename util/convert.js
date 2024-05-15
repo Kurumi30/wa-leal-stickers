@@ -75,7 +75,7 @@ async function editImage(buffer, type){
     return await image.getBufferAsync('image/png')
 }
 
-async function addExif(buffer, pack, author){
+export async function addExif(buffer, pack, author){
     const img = new webp.Image()
     const stickerPackId = crypto.randomBytes(32).toString('hex')
     const json = { 'sticker-pack-id': stickerPackId, 'sticker-pack-name': pack, 'sticker-pack-publisher': author}
